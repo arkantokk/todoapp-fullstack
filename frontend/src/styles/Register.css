@@ -1,0 +1,29 @@
+.registerForm{
+    font-family: 'Times New Roman', Times, serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 500px;
+
+}
+
+.main-container{
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.form-group{
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    padding-top: 15px;
+}
+
+label{
+    padding: 15px 0 15px 0;
+}
+
+input{
+    line-height: 2em;
+}
