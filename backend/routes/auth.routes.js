@@ -8,11 +8,14 @@ router.post(
     '/registration',
     [
         check('email','Uncorrect email').isEmail(),
-        check('password', 'Password must be longer than 5 characters').isLength({min: 5})
+        check('password', 'Password must be longer than 5 characters').isLength({min: 5}),
+        check('username', 'Username cannot be empty').notEmpty()
     ],
      authController.register);
 
 router.post('/login', authController.login);
-
 router.get('/refresh', authController.refresh)
+router.post('/logout', authController.logout)
+
+
 module.exports = router;

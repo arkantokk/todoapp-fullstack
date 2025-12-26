@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { setCredentials } from "../store/slices/authSlice";
 import AuthService from "../services/authService";
 import RegInput from "../components/ui/RegInput";
@@ -9,6 +9,7 @@ import RegBtn from "../components/ui/RegBtn";
 const Login = () => {
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
+    const [error, setError] = useState('')
     const dispatch = useDispatch();
     const navigate = useNavigate();
 
@@ -21,8 +22,9 @@ const Login = () => {
             console.log("Login success:", response.data);
             dispatch(setCredentials(response.data));
             navigate('/');
-        } catch (error) {
-            console.log(error);
+        } catch (err) {
+            console.log(err);
+            setError(err?.response?.data?.message);
         }
     }
     return (
@@ -34,6 +36,11 @@ const Login = () => {
                 <h1 className='text-3xl font-bold text-center text-white mb-8'>Login</h1>
 
                 <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+                    {error && (
+                        <div style={{ color: 'red', marginBottom: '10px' }}>
+                            {error}
+                        </div>
+                    )}
                     <RegInput
                         id="email"
                         value={email}

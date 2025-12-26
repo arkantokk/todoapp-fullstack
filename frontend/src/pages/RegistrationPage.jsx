@@ -2,10 +2,13 @@ import '../styles/Register.css'
 import RegInput from '../components/ui/RegInput'
 import RegBtn from '../components/ui/RegBtn'
 import { useEffect, useState } from 'react'
-import { Link } from "react-router";
-import { validateEmail } from '../utils/validators';
-import { validatePassword } from '../utils/validators';
+import { Link, useNavigate } from "react-router-dom";
+import { validateEmail, validatePassword, validateUsername } from '../utils/validators';
 
+
+import { useDispatch } from 'react-redux';
+import { setCredentials } from '../store/slices/authSlice';
+import AuthService from '../services/authService';
 const Register = () => {
     // OLD USE STATES 
     // 
@@ -16,22 +19,28 @@ const Register = () => {
     // const [emailDirty, setEmailDirty] = useState(false)
     // const [passwordDirty, setPasswordDirty] = useState(false)
     const [formValid, setFormValid] = useState(false)
-
+    const [serverError, setServerError] = useState('')
     const [values, setValues] = useState({
         email: '',
-        password: ''
+        password: '',
+        username: ''
     });
     const [errors, setErrors] = useState({
         email: "Email can't be empty",
-        password: "Password can't be empty"
+        password: "Password can't be empty",
+        username: "Username can't be empty"
     });
     const [dirty, setDirty] = useState({
         email: false,
-        password: false
+        password: false,
+        username: false
     });
 
+    const dispatch = useDispatch();
+    const navigate = useNavigate();
+
     useEffect(() => {
-        if (errors.email || errors.password) {
+        if (errors.email || errors.password || errors.username) {
             setFormValid(false)
         } else {
             setFormValid(true)
@@ -49,7 +58,7 @@ const Register = () => {
         let error = "";
         if (name === 'email') error = validateEmail(value);
         if (name === 'password') error = validatePassword(value);
-
+        if (name === 'username') error = validateUsername(value);
         setErrors(prev => ({
             ...prev,
             [name]: error
@@ -65,9 +74,25 @@ const Register = () => {
         }))
     }
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        console.log("Zaebis", values)
+        if (!formValid) return;
+        try {
+            const response = await AuthService.registration(values.email, values.password, values.username);
+
+            console.log("Registration success:", response.data);
+            localStorage.setItem('token', response.data.accessToken);
+
+            dispatch(setCredentials(response.data));
+            navigate('/');
+        } catch (error) {
+            console.log(error);
+            // Тут можна додати обробку помилок
+            // Наприклад, якщо сервер сказав "User already exists"
+            const serverMessage = error.response?.data?.message;
+            setServerError(serverMessage);
+        }
+        console.log("Works", values)
     }
 
 
@@ -105,21 +130,37 @@ const Register = () => {
                 </h1>
 
                 <form className="flex flex-col gap-6" onSubmit={handleSubmit}>
-
+                    {serverError && (
+                        <div style={{ color: 'red', marginBottom: '10px' }}>
+                            {serverError}
+                        </div>
+                    )}
                     {/* Email RegInput */}
                     <RegInput
                         id="email"
-                        name="email" 
+                        name="email"
                         type="email"
                         label="Email"
                         placeholder="Enter your email"
-                        value={values.email} 
-                        onChange={handleChange} 
-                        onBlur={handleBlur}     
-                        
+                        value={values.email}
+                        onChange={handleChange}
+                        onBlur={handleBlur}
+
                         error={(dirty.email && errors.email) ? errors.email : ""}
                     />
+                    {/* Username RegInput */}
+                    <RegInput
+                        id="username"
+                        name="username"
+                        type="text"
+                        label="Username"
+                        placeholder="Enter your username"
+                        value={values.username}
+                        onChange={handleChange}
+                        onBlur={handleBlur}
 
+                        error={(dirty.username && errors.username) ? errors.username : ""}
+                    />
                     {/* Password RegInput */}
                     <RegInput
                         id="password"

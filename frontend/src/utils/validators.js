@@ -14,3 +14,10 @@ export const validatePassword = (password) => {
     
     return "";
 };
+
+export const validateUsername = (username) => {
+    if (!password) return "Username can't be empty";
+    if (password.length < 4 || password.length > 9) return "Username has to be more than 3 symbols and less than 9";
+    
+    return "";
+};

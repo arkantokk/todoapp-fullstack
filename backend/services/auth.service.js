@@ -6,17 +6,22 @@ const bcrypt = require('bcryptjs');
 class AuthService {
     async register(userData) {
 
-        const candidate = await User.findOne({ email: userData.email });
+        const candidateEmail = await User.findOne({ email: userData.email });
+        const candidateUsername = await User.findOne({ username: userData.username })
 
-        if (candidate) {
+        if (candidateEmail) {
             throw new Error('User with this email already exists');
+        }
+        if (candidateUsername) {
+            throw new Error('User with this username already exists');
         }
 
         const user = await User.create(userData);
 
         const userDto = {
             id: user._id,
-            email: user.email
+            email: user.email,
+            username: user.username
         }
         const tokens = tokenService.generateTokens(userDto);
         await tokenService.saveToken(userDto.id, tokens.refreshToken);
@@ -27,9 +32,15 @@ class AuthService {
         };
     }
 
-    async login(email, password) {
+    async login(loginInput, password) {
 
-        const user = await User.findOne({ email })
+        const user = await User.findOne({
+            $or: [
+                { email: loginInput },
+                { username: loginInput }
+            ]
+        });
+
         if (!user) {
             throw new Error('User not found');
         }
@@ -39,7 +50,7 @@ class AuthService {
             throw new Error('Incorrect password');
         }
 
-        const userDto = { id: user._id, email: user.email };
+        const userDto = { id: user._id, email: user.email, username: user.username };
         const tokens = tokenService.generateTokens(userDto);
 
         await tokenService.saveToken(userDto.id, tokens.refreshToken);
@@ -59,7 +70,7 @@ class AuthService {
 
         const userData = tokenService.validateRefreshToken(refreshToken);
 
-        const tokenFromDb = await Token.findOne({refreshToken});
+        const tokenFromDb = await Token.findOne({ refreshToken });
 
         if (!userData || !tokenFromDb) {
             throw new Error('unauthorized');
@@ -69,13 +80,27 @@ class AuthService {
         if (!user) {
             throw new Error('User not found'); // Або теж 'Unauthorized'
         }
-        const userDto = { id: user._id, email: user.email };
+        const userDto = { id: user._id, email: user.email, username: user.username };
         const tokens = tokenService.generateTokens(userDto);
         await tokenService.saveToken(userDto.id, tokens.refreshToken);
 
         return {
             ...tokens,
             user: userDto
+        }
+    }
+
+    async logout(refreshToken) {
+        if (!refreshToken) {
+            console.log("error");
+            throw new Error('unauthorized');
+            
+        }
+
+        const token = await tokenService.removeToken(refreshToken);
+
+        return {
+            token
         }
     }
 }

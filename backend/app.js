@@ -7,7 +7,11 @@ const todoRouter = require('./routes/todo.routes');
 const app = express();
 app.use(cookieParser());
 app.use(express.json());
-app.use(cors());
+app.use(cors({
+    credentials: true, // Дозволяємо куки (це ключове!)
+    origin: 'http://localhost:5173' // Чітко вказуємо, ХТО має право стукати (твоя адреса фронтенду)
+    // Або: process.env.CLIENT_URL, якщо ти виніс це в .env
+}));
 app.use('/api/auth', authRouter);
 app.use('/api/todos', todoRouter);
 
