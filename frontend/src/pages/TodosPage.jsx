@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { logout } from '../store/slices/authSlice'; // Імпорт екшену виходу
-import AuthService from '../services/authService';  // Імпорт сервісу (перевір назву файлу!)
-import RegBtn from '../components/ui/RegBtn';       // Твоя кнопка
-import { fetchTodos, addTodo, deleteTodo } from '../store/slices/todoSlice';
+import { logout } from '../store/slices/authSlice';
+import AuthService from '../services/authService';
+import RegBtn from '../components/ui/RegBtn';
+import { fetchTodos, addTodo, deleteTodo, toggleTodoStatus } from '../store/slices/todoSlice';
 import TodoInput from '../components/ui/TodoInput';
 import RemoveBtn from '../components/ui/RemoveBtn';
 import CreateBtn from '../components/ui/CreateBtn';
@@ -29,7 +29,7 @@ const TodosPage = () => {
             console.log(error);
         }
     }
-    
+
     const handleDelete = (id) => {
         dispatch(deleteTodo(id));
     }
@@ -39,6 +39,10 @@ const TodosPage = () => {
         if (!taskText.trim()) return;
         dispatch(addTodo(taskText));
         setTaskText('');
+    }
+
+    const handleToggle = (todo) => {
+        dispatch(toggleTodoStatus({ id: todo._id, completed: !todo.completed }));
     }
 
     return (
@@ -55,9 +59,23 @@ const TodosPage = () => {
             {!isLoading && (
                 <ul className="w-full max-w-md mt-4">
                     {items.map(todo => (
-                        <li key={todo._id} className="p-3 bg-gray-800 rounded mb-2 flex justify-between">
-                            {todo.text}
-                            <RemoveBtn text="X" onClick={() => {handleDelete(todo._id)}}/>
+                        <li key={todo._id} className="p-3 bg-gray-800 rounded mb-2 flex justify-between items-center group">
+                            <div className="flex items-center gap-3">
+                               
+                                <input
+                                    type="checkbox"
+                                    checked={todo.completed}
+                                    onChange={() => handleToggle(todo)}
+                                    className="w-5 h-5 cursor-pointer accent-indigo-500"
+                                />
+
+                                <span className={`transition-all duration-300 ${todo.completed ? "line-through text-gray-500 opacity-60" : "text-white"
+                                    }`}>
+                                    {todo.text}
+                                </span>
+                            </div>
+
+                            <RemoveBtn text="X" onClick={() => handleDelete(todo._id)} />
                         </li>
                     ))}
                 </ul>
@@ -69,7 +87,7 @@ const TodosPage = () => {
                     id="taskText"
                     onChange={(e) => setTaskText(e.target.value)}
                 />
-                <CreateBtn text="Create task" disabled={!taskText.trim()}/>
+                <CreateBtn text="Create task" disabled={!taskText.trim()} />
             </form>
             <p className="mb-8 text-gray-400">
                 Це захищена сторінка. Тільки авторизовані бачать це.

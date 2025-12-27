@@ -39,6 +39,17 @@ export const deleteTodo = createAsyncThunk(
     }
 );
 
+export const toggleTodoStatus = createAsyncThunk(
+    'todos/update',
+    async ({ id, completed }, { rejectWithValue }) => {
+        try {
+            const response = await TodoService.updateTodo(id, { completed });
+            return response.data
+        } catch (e) {
+            return rejectWithValue(e.response?.data?.message || "cant update")
+        }
+    }
+)
 const initialState = {
     items: [],
     isLoading: false,
@@ -80,11 +91,17 @@ const todoSlice = createSlice({
             .addCase(deleteTodo.fulfilled, (state, action) => {
                 state.isLoading = false;
                 state.items = state.items.filter(todo => todo._id !== action.payload.id)
-                
+
             })
             .addCase(deleteTodo.rejected, (state, action) => {
                 state.isLoading = false;
                 state.error = action.payload;
+            })
+            .addCase(toggleTodoStatus.fulfilled, (state, action) => {
+                state.isLoading = false;
+                state.items = state.items.map(todo =>
+                    todo._id === action.payload._id ? action.payload : todo
+                );
             });
     },
 });

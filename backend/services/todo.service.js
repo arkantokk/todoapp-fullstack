@@ -31,6 +31,7 @@ class TodoService {
             updateData,
             { new: true }
         )
+        return todo;
     }
 }
 

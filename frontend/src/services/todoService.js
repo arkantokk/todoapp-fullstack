@@ -10,13 +10,12 @@ export class TodoService {
 
     // 3. Видалення
     static async deleteTodo(id) {
-        // ТУТ: Виклич $api.delete. Не забудь додати id в кінець URL
         return $api.delete(`/todos/${id}`)
     }
 
     // 4. Оновлення (наприклад, зміна тексту або статусу "виконано")
-    static async updateTodo(id, updateData) {
-        // ТУТ: Виклич $api.put. Потрібен і id в URL, і самі дані updateData
-        return $api.put(`/todos/${id}`, updateData)
+    static async updateTodo(id, updatedData) {
+
+        return $api.put(`/todos/${id}`, updatedData)
     }
 }

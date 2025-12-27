@@ -57,7 +57,7 @@ class TodoController {
                 return res.status(400).json({ message: "Todo not updated" });
             }
 
-            res.status(200).json(updateData);
+            res.status(200).json(updatedTodo);
         } catch (error) {
             console.log(error);
             res.status(500);
