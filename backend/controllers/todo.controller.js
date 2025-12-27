@@ -8,7 +8,7 @@ class TodoController {
             const userId = req.user.id
             const todo = await todoService.create({ text }, userId);
 
-            res.status(201).json("succesfully created task")
+            res.status(201).json(todo);
         } catch (err) {
             console.log(err);
             res.status(500).json("Error when creating task")

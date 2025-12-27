@@ -5,7 +5,6 @@ export class TodoService {
         return $api.get('/todos')
     }
     static async createTodo(text) {
-
         return $api.post('/todos', {text: text})
     }
 

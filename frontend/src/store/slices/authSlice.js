@@ -34,7 +34,7 @@ export const logout = createAsyncThunk(
         try {
             await $api.post('/auth/logout', {});
         } catch (error) {
-            console.warn("Logout error on server", error);
+            return rejectWithValue(error.response?.data?.message || 'Помилка авторизації');
         } finally {
             localStorage.removeItem('token');
             localStorage.removeItem('user');
