@@ -9,6 +9,19 @@ const TokenSchema = new mongoose.Schema({
     refreshToken: {
         type: String,
         required: true
+    },
+    isUsed: {
+        type: Boolean,
+        default: false 
+    },
+    usedAt: {
+        type: Date,
+        default: null
+    },
+    createdAt: {
+        type: Date,
+        default: Date.now,
+        expires: '30d'
     }
 })
 

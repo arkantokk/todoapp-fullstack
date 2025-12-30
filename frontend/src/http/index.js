@@ -29,11 +29,13 @@ $api.interceptors.response.use((config) => {
 }, async (error) => {
     const originalRequest = error.config;
 
-    // Перевіряємо статус 401 і чи це не повторний запит
-    if (error.response?.status === 401 && originalRequest && !originalRequest._isRetry) {
+    // ГАРД: Якщо помилка прийшла від САМОГО запиту на рефреш (який робить цей інтерцептор)
+    if (error.config.url.includes('/auth/refresh')) {
+        return Promise.reject(error);
+    }
 
+    if (error.response?.status === 401 && originalRequest && !originalRequest._isRetry) {
         if (isRefreshing) {
-            // Якщо оновлення вже йде, створюємо проміс і додаємо його в чергу
             return new Promise((resolve) => {
                 subscribeTokenRefresh((token) => {
                     originalRequest._isRetry = true;
@@ -47,29 +49,21 @@ $api.interceptors.response.use((config) => {
         isRefreshing = true;
 
         try {
-            // Використовуємо чистий axios для рефрешу
+            // Ось цей запит робить інтерцептор, коли токен помирає ПІД ЧАС роботи
             const response = await axios.get(`${API_URL}/auth/refresh`, { withCredentials: true });
             const newToken = response.data.accessToken;
 
             localStorage.setItem('token', newToken);
-
-            // Виконуємо всі запити з черги
             onRefreshed(newToken);
             isRefreshing = false;
 
-            // Виконуємо поточний запит
             originalRequest.headers.Authorization = `Bearer ${newToken}`;
             return $api(originalRequest);
         } catch (e) {
             isRefreshing = false;
             refreshSubscribers = [];
-
-            // ДОДАЙ ЦЕ: Якщо запит просто скасовано (наприклад, F5), не кидай помилку як 401
-            if (axios.isCancel(e)) {
-                return new Promise(() => { }); // "Заморожуємо" проміс, щоб не було rejected
-            }
-
-            console.log('АВТОРИЗАЦІЯ ВТРАЧЕНА');
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
             return Promise.reject(e);
         }
     }

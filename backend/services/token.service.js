@@ -3,7 +3,7 @@ const TokenModel = require('../models/Token')
 
 class TokenService {
     generateTokens(payload) {
-        const accessToken = jwt.sign(payload, process.env.JWT_ACCESS_SECRET, { expiresIn: '30m' });
+        const accessToken = jwt.sign(payload, process.env.JWT_ACCESS_SECRET, { expiresIn: '15m' }); // Access живе мало
         const refreshToken = jwt.sign(payload, process.env.JWT_REFRESH_SECRET, { expiresIn: '30d' })
 
         return {
@@ -13,26 +13,30 @@ class TokenService {
     }
 
     async saveToken(userId, refreshToken) {
-        const tokenData = await TokenModel.findOne({ user: userId });
-
-        if (tokenData) {
-            tokenData.refreshToken = refreshToken;
-            return tokenData.save();
-        }
-
         const token = await TokenModel.create({ user: userId, refreshToken });
-
         return token;
     }
 
-    async removeToken(refreshToken) {
-        const tokenData = await TokenModel.findOneAndDelete({ refreshToken: refreshToken });
 
+    async markTokenAsUsed(tokenId) {
+        return await TokenModel.findByIdAndUpdate(tokenId, {
+            isUsed: true,
+            usedAt: new Date()
+        });
+    }
+
+    async removeToken(refreshToken) {
+        const tokenData = await TokenModel.findOneAndDelete({ refreshToken });
         return tokenData;
+    }
+    
+
+    async removeAllUserTokens(userId) {
+        return await TokenModel.deleteMany({ user: userId });
     }
 
     validateRefreshToken(token) {
-
+        
         try {
             return jwt.verify(token, process.env.JWT_REFRESH_SECRET);
         } catch (error) {
@@ -41,12 +45,8 @@ class TokenService {
     }
 
     async findToken(refreshToken) {
-        try {
-            const token = await TokenModel.findOne({ refreshToken });
-            return token;
-        } catch (err) {
-            console.log(err)
-        }
+        const token = await TokenModel.findOne({ refreshToken });
+        return token;
     }
 }
 

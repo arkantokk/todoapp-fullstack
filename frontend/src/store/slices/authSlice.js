@@ -1,15 +1,20 @@
-import { createSlice, createAsyncThunk, isRejectedWithValue } from "@reduxjs/toolkit";
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from 'axios';
-import $api, { API_URL } from '../../http/index';
+import { API_URL } from '../../http/index';
+
+// Створюємо чистий інстанс axios, щоб Інтерцептор не ліз у checkAuth
+const $axios = axios.create({
+    withCredentials: true,
+    baseURL: API_URL
+});
 
 export const checkAuth = createAsyncThunk(
     'auth/checkAuth',
-    async (_, { rejectWithValue, signal }) => {
+    async (_, { rejectWithValue }) => {
         try {
-            const response = await axios.get(`${API_URL}/auth/refresh`, {
-                withCredentials: true,
-                signal: signal
-            });
+            // Використовуємо чистий axios. Це ОДИН запит на старті.
+            // Якщо він пройде — ок. Якщо ні — 401 і вихід.
+            const response = await $axios.get('/auth/refresh');
 
             localStorage.setItem('token', response.data.accessToken);
             if (response.data.user) {
@@ -17,30 +22,53 @@ export const checkAuth = createAsyncThunk(
             }
             return response.data;
         } catch (error) {
-            if (axios.isCancel(error) || error.code === 'ERR_NETWORK') {
-                throw error;
-            }
-
-            if (error.response) {
-                return rejectWithValue(error.response?.data?.message || 'Помилка авторизації');
-            }
+            // Кука мертва, чистимо все
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            return rejectWithValue(error.response?.data?.message || 'Unauthorized');
         }
     }
-)
+);
+
+export const login = createAsyncThunk(
+    'auth/login',
+    async ({ email, password }, { rejectWithValue }) => {
+        try {
+            const response = await $axios.post('/auth/login', { email, password });
+            localStorage.setItem('token', response.data.accessToken);
+            return response.data;
+        } catch (error) {
+            return rejectWithValue(error.response?.data?.message);
+        }
+    }
+);
+
+export const registration = createAsyncThunk(
+    'auth/registration',
+    async ({ email, password, username }, { rejectWithValue }) => {
+        try {
+            const response = await $axios.post('/auth/registration', { email, password, username });
+            localStorage.setItem('token', response.data.accessToken);
+            return response.data;
+        } catch (error) {
+            return rejectWithValue(error.response?.data?.message);
+        }
+    }
+);
 
 export const logout = createAsyncThunk(
     'auth/logout',
     async (_, { rejectWithValue }) => {
         try {
-            await $api.post('/auth/logout', {});
+            await $axios.post('/auth/logout');
         } catch (error) {
-            return rejectWithValue(error.response?.data?.message || 'Помилка авторизації');
+            return rejectWithValue(error.response?.data?.message);
         } finally {
             localStorage.removeItem('token');
             localStorage.removeItem('user');
         }
     }
-)
+);
 
 const getUserFromStorage = () => {
     try {
@@ -54,8 +82,10 @@ const getUserFromStorage = () => {
 const initialState = {
     user: getUserFromStorage(),
     token: localStorage.getItem('token'),
-    isAuth: !!localStorage.getItem('token'),
-    isLoading: false,
+    // isAuth: false — це критично, поки не пройде checkAuth
+    isAuth: false,
+    // isLoading: true, якщо є токен — блокуємо рендер App
+    isLoading: !!localStorage.getItem('token'),
     error: null
 }
 
@@ -71,49 +101,55 @@ const authSlice = createSlice({
             state.isAuth = true;
             localStorage.setItem('user', JSON.stringify(user));
             localStorage.setItem('token', accessToken);
+        },
+        setLoading: (state, action) => {
+            state.isLoading = action.payload;
         }
     },
 
     extraReducers: (builder) => {
         builder
+            // CHECK AUTH
             .addCase(checkAuth.pending, (state) => {
                 state.isLoading = true;
             })
             .addCase(checkAuth.fulfilled, (state, action) => {
                 state.isLoading = false;
                 state.isAuth = true;
-                if (action.payload.user) {
-                    state.user = action.payload.user;
-                }
+                state.user = action.payload.user;
                 state.token = action.payload.accessToken;
             })
             .addCase(checkAuth.rejected, (state, action) => {
                 state.isLoading = false;
-
-                if (action.payload) {
-                    // Ми не видаляємо все відразу. 
-                    // Якщо це була помилка 401 на старті (рефреш), 
-                    // можливо це просто "глюк" подвійного оновлення.
-
-                    // Перевіряємо, чи є взагалі токен. 
-                    // Якщо він є, ми даємо системі шанс НЕ вилогінювати користувача миттєво.
-                    const currentToken = localStorage.getItem('token');
-
-                    if (currentToken) {
-                        console.warn("CheckAuth rejected, but token exists. Ignoring to prevent session kill on rapid refresh.");
-                        // Ми НЕ скидаємо isAuth в false тут миттєво, 
-                        // щоб RequireAuth не спрацював раніше часу.
-                        return;
-                    }
-
-                    state.isAuth = false;
-                    state.user = null;
-                    state.token = null;
-                    state.error = action.payload;
-                    localStorage.removeItem('token');
-                    localStorage.removeItem('user');
-                }
+                state.isAuth = false;
+                state.user = null;
+                state.token = null;
+                state.error = action.payload;
             })
+
+            // LOGIN
+            .addCase(login.fulfilled, (state, action) => {
+                state.isAuth = true;
+                state.user = action.payload.user;
+                state.token = action.payload.accessToken;
+                state.error = null;
+            })
+            .addCase(login.rejected, (state, action) => {
+                state.error = action.payload;
+            })
+
+            // REGISTRATION
+            .addCase(registration.fulfilled, (state, action) => {
+                state.isAuth = true;
+                state.user = action.payload.user;
+                state.token = action.payload.accessToken;
+                state.error = null;
+            })
+            .addCase(registration.rejected, (state, action) => {
+                state.error = action.payload;
+            })
+
+            // LOGOUT
             .addCase(logout.fulfilled, (state) => {
                 state.user = null;
                 state.token = null;
@@ -124,11 +160,9 @@ const authSlice = createSlice({
                 state.token = null;
                 state.isAuth = false;
             })
-
     }
 });
 
-
-export const { setCredentials } = authSlice.actions;
+export const { setCredentials, setLoading } = authSlice.actions;
 
 export default authSlice.reducer;
