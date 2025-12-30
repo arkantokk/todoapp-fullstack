@@ -13,7 +13,16 @@ const TodoSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
         required: true
+    },
+    date: {
+        type: Date,
+        required: true,
     }
 }, { timestamps: true })
+
+TodoSchema.index({
+    owner: 1,
+    date: 1
+})
 
 module.exports = mongoose.model('Todo', TodoSchema);

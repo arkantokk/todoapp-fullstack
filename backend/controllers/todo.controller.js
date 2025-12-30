@@ -4,9 +4,9 @@ const todoService = require('../services/todo.service');
 class TodoController {
     async createTodo(req, res) {
         try {
-            const { text } = req.body;
+            const { text, date } = req.body;
             const userId = req.user.id
-            const todo = await todoService.create({ text }, userId);
+            const todo = await todoService.create({ text, date }, userId);
 
             res.status(201).json(todo);
         } catch (err) {
@@ -18,7 +18,9 @@ class TodoController {
     async getTodos(req, res) {
         try {
             const userId = req.user.id;
-            const todos = await todoService.getAllTodos(userId);
+            const page = parseInt(req.query.page) || 1;
+            const limit = parseInt(req.query.limit) || 10;
+            const todos = await todoService.getAllTodos(userId, page, limit);
 
             res.status(200).json(todos);
         } catch (error) {
@@ -61,6 +63,22 @@ class TodoController {
         } catch (error) {
             console.log(error);
             res.status(500);
+        }
+    }
+
+    async getCalendarTodos(req, res) {
+        try {
+            const start = req.query.start;
+            const end = req.query.end;
+            if(!start || !end){
+                return res.status(400).json("Bad request: start and end required")
+            }
+            const userId = req.user.id;
+            const todos = await todoService.getCalendarTasks(userId, start, end);
+
+            res.status(200).json(todos);
+        } catch (error) {
+            res.status(500).json("Server error")
         }
     }
 }
