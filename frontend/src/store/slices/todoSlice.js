@@ -1,6 +1,6 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk, createSelector } from '@reduxjs/toolkit';
 import { TodoService } from '../../services/todoService';
-
+import { format } from 'date-fns'
 
 export const fetchTodos = createAsyncThunk(
     'todos/fetchAll',
@@ -56,12 +56,12 @@ const initialState = {
     error: null
 };
 
-// 3. Створюємо сам Слайс
+
 const todoSlice = createSlice({
     name: 'todos',
     initialState,
     reducers: {
-        // Тут поки порожньо, бо в нас тільки асинхронні дії
+
     },
     extraReducers: (builder) => {
         builder
@@ -71,14 +71,11 @@ const todoSlice = createSlice({
             })
             .addCase(fetchTodos.fulfilled, (state, action) => {
                 state.isLoading = false;
-                state.items = action.payload;
-
+                state.items = action.payload.data;
             })
             .addCase(fetchTodos.rejected, (state, action) => {
                 state.isLoading = false;
                 state.error = action.payload;
-
-
             })
             .addCase(addTodo.pending, (state) => {
                 state.isLoading = true;
@@ -91,7 +88,6 @@ const todoSlice = createSlice({
             .addCase(deleteTodo.fulfilled, (state, action) => {
                 state.isLoading = false;
                 state.items = state.items.filter(todo => todo._id !== action.payload.id)
-
             })
             .addCase(deleteTodo.rejected, (state, action) => {
                 state.isLoading = false;
@@ -107,3 +103,18 @@ const todoSlice = createSlice({
 });
 
 export default todoSlice.reducer;
+
+export const selectTodosGroupedByDate = createSelector(
+    [(state) => state.todos.items],
+    (items) => {
+        if (!items) return {};
+        return items.reduce((acc, todo) => {
+            const dateKey = format(new Date(todo.date), 'yyyy-MM-dd')
+            if (!acc[dateKey]) {
+                acc[dateKey] = [];
+            }
+            acc[dateKey].push(todo)
+            return acc;
+        }, {});
+    }
+);

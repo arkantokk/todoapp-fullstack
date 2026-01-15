@@ -87,8 +87,6 @@ const Register = () => {
             navigate('/');
         } catch (error) {
             console.log(error);
-            // Тут можна додати обробку помилок
-            // Наприклад, якщо сервер сказав "User already exists"
             const serverMessage = error.response?.data?.message;
             setServerError(serverMessage);
         }

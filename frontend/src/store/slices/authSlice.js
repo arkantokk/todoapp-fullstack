@@ -2,7 +2,6 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from 'axios';
 import { API_URL } from '../../http/index';
 
-// Створюємо чистий інстанс axios, щоб Інтерцептор не ліз у checkAuth
 const $axios = axios.create({
     withCredentials: true,
     baseURL: API_URL
@@ -12,8 +11,6 @@ export const checkAuth = createAsyncThunk(
     'auth/checkAuth',
     async (_, { rejectWithValue }) => {
         try {
-            // Використовуємо чистий axios. Це ОДИН запит на старті.
-            // Якщо він пройде — ок. Якщо ні — 401 і вихід.
             const response = await $axios.get('/auth/refresh');
 
             localStorage.setItem('token', response.data.accessToken);
@@ -22,7 +19,6 @@ export const checkAuth = createAsyncThunk(
             }
             return response.data;
         } catch (error) {
-            // Кука мертва, чистимо все
             localStorage.removeItem('token');
             localStorage.removeItem('user');
             return rejectWithValue(error.response?.data?.message || 'Unauthorized');
@@ -82,9 +78,7 @@ const getUserFromStorage = () => {
 const initialState = {
     user: getUserFromStorage(),
     token: localStorage.getItem('token'),
-    // isAuth: false — це критично, поки не пройде checkAuth
     isAuth: false,
-    // isLoading: true, якщо є токен — блокуємо рендер App
     isLoading: !!localStorage.getItem('token'),
     error: null
 }
