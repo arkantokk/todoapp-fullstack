@@ -4,7 +4,7 @@ import { setTheme } from "../store/slices/authSlice";
 
 export default function SimpleDropdown() {
   const [isOpen, setIsOpen] = useState(false);
-  const currentTheme = localStorage.getItem('theme');
+  const currentTheme = localStorage.getItem('theme') || 'default';
 
   const dispatch = useDispatch();
   const handleOption = (name) => {
