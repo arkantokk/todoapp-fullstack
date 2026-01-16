@@ -19,10 +19,8 @@ const TodosPage = () => {
     };
 
     const handleChangePassword = async (values) => {
-        // 1. Відправляємо екшн
         const result = await dispatch(changePassword(values));
 
-        // 2. Логуємо результат для діагностики
         console.log("Result Action:", result);
 
         if (changePassword.fulfilled.match(result)) {
@@ -31,11 +29,10 @@ const TodosPage = () => {
         } 
         else if (changePassword.rejected.match(result)) {
             const payload = result.payload;
-            console.log("Error Payload:", payload); // Подивіться, що тут
+            console.log("Error Payload:", payload);
             
             let text = "Something went wrong";
 
-            // Перевірка різних форматів помилки
             if (payload?.errors?.length > 0) {
                 text = payload.errors[0].msg;
             } 
@@ -47,7 +44,7 @@ const TodosPage = () => {
             }
             
             console.log("Setting error text to:", text);
-            setErrorMessage(text); // Це має відкрити ModalMessage
+            setErrorMessage(text);
         }
     };
 
