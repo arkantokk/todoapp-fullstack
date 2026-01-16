@@ -66,8 +66,9 @@ class AuthContoller {
 
             res.cookie('refreshToken', userData.refreshToken, {
                 maxAge: 30 * 24 * 60 * 60 * 1000,
-                httpOnly: true
-                // secure: true (для https)
+                httpOnly: true,
+                secure: true,
+                sameSite: 'none'
             })
 
             return res.status(200).json({
