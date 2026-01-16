@@ -1,4 +1,4 @@
-const Token = require('../models/Token'); // Переконайся, що шлях правильний
+const Token = require('../models/Token');
 const User = require('../models/User');
 const tokenService = require('./token.service')
 const bcrypt = require('bcryptjs');
@@ -97,6 +97,21 @@ class AuthService {
         if (!refreshToken) throw new Error('Unauthorized');
         const token = await tokenService.removeToken(refreshToken);
         return { token }
+    }
+
+    async changePassword(currentPassword, newPassword, refreshToken){
+        const userData = tokenService.validateRefreshToken(refreshToken);
+        if(!userData) throw new Error('Invalid refresh token');
+        const user = await User.findById(userData.id);
+        if(!user) throw new Error('No such user');
+
+        const isPassEquals = await bcrypt.compare(currentPassword, user.password);
+        if (!isPassEquals) throw new Error('Incorrect password');
+
+        user.password = newPassword
+        await user.save()
+
+        return {message: "Password changed successfully"}
     }
 }
 

@@ -9,7 +9,7 @@ export const fetchTodos = createAsyncThunk(
             const response = await TodoService.fetchTodos();
             return response.data;
         } catch (e) {
-            return rejectWithValue(e.response?.data?.message || 'Помилка');
+            return rejectWithValue(e.response?.data?.message || 'Error');
         }
     }
 );
@@ -21,12 +21,11 @@ export const addTodo = createAsyncThunk(
             const response = await TodoService.createTodo(text);
             return response.data;
         } catch (e) {
-            return rejectWithValue(e.response?.data?.message || 'Не вдалося додати');
+            return rejectWithValue(e.response?.data?.message || 'Error when creating task');
         }
     }
 );
 
-// Thunk для видалення
 export const deleteTodo = createAsyncThunk(
     'todos/delete',
     async (id, { rejectWithValue }) => {
@@ -34,7 +33,7 @@ export const deleteTodo = createAsyncThunk(
             const response = await TodoService.deleteTodo(id);
             return response.data;
         } catch (e) {
-            return rejectWithValue(e.response?.data?.message || 'Не вдалося видалити');
+            return rejectWithValue(e.response?.data?.message || 'Error when deleting task');
         }
     }
 );

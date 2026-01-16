@@ -2,13 +2,15 @@ import { useState, memo } from 'react';
 import { format, isSameMonth, isToday } from 'date-fns';
 import RemoveBtn from './RemoveBtn';
 import { THEMES } from '../../constants/themeStyles';
+import { useSelector } from 'react-redux';
 
-const currentTheme = 'dots';
-const themeClasses = THEMES[currentTheme] || 'bg-white';
+
+
 
 const CalendarDay = memo(({ day, currentDate, tasks = [], onAddTask, onToggle, isExpanded = false, handleRemove }) => {
     const [inputValue, setInputValue] = useState('');
-
+    const {theme} = useSelector(state => state.auth);
+    const themeClasses = THEMES[theme] || 'bg-white';
     const handleKeyDown = (e) => {
         if (e.key === 'Enter' && inputValue.trim()) {
             onAddTask(day, inputValue);
@@ -83,14 +85,14 @@ const CalendarDay = memo(({ day, currentDate, tasks = [], onAddTask, onToggle, i
                                     </div>
                                 ) : (
                                     
-                                    <div className={` mt-[2px] w-1.5 h-1.5 rounded-full shrink-0 ${task.completed ? 'bg-gray-300' : 'bg-blue-500'}`}></div>
+                                    <div className={` mt-[9px] w-1.5 h-1.5 rounded-full shrink-0 ${task.completed ? 'bg-gray-300' : 'bg-blue-500'}`}></div>
                                 )}
 
                                 {/* there is text of todo */}
                                 <span
                                     className={`flex-1 truncate min-w-0 leading-5 mt-0.5 text-left ${task.completed ? 'line-through text-gray-400' : 'text-gray-800'}`}
                                     onClick={(e) => {
-                                        e.stopPropagation();
+                                        
                                         onToggle(task._id, !task.completed);
                                     }}
                                 >
@@ -112,7 +114,7 @@ const CalendarDay = memo(({ day, currentDate, tasks = [], onAddTask, onToggle, i
                         ))
                     ) : (
                         isExpanded && (
-                            <div className="h-full flex items-center justify-center text-gray-400 text-sm italic">
+                            <div className="h-full flex items-center justify-center text-gray-400 text-xl italic">
                                 No tasks
                             </div>
                         )

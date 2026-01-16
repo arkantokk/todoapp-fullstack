@@ -39,7 +39,7 @@ class AuthContoller {
     async login(req, res) {
         try {
 
-            const { email, password,  } = req.body;
+            const { email, password, } = req.body;
 
             const userData = await authService.login(email, password);
 
@@ -76,7 +76,7 @@ class AuthContoller {
             })
         } catch (error) {
             console.log(error);
-            return res.status(401).json({message:"unatuhoras" , error: error.message})
+            return res.status(401).json({ message: "unatuhoras", error: error.message })
         }
 
     }
@@ -91,10 +91,34 @@ class AuthContoller {
             return res.status(200).json(token);
         } catch (error) {
             console.log(error);
-            return res.status(401).json({message:"unatuhoras" , error: error.message})
+            return res.status(401).json({ message: "unatuhoras", error: error.message })
         }
 
     }
+
+    async changePassword(req, res) {
+        try {
+            const errors = validationResult(req);
+            if (!errors.isEmpty()) {
+                return res.status(400).json({
+                    message: "Validation error",
+                    errors: errors.array()
+                });
+            }
+
+            const { currentPassword, newPassword } = req.body;
+            const { refreshToken } = req.cookies;
+
+            const result = await authService.changePassword(currentPassword, newPassword, refreshToken);
+            
+            return res.status(200).json(result);
+        } catch (error) {
+            console.log(error);
+            return res.status(400).json({ message: error.message, error: error.message });
+        }
+    }
 }
+
+
 
 module.exports = new AuthContoller();

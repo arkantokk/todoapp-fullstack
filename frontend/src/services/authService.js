@@ -12,4 +12,8 @@ export default class AuthService {
     static async logout() {
         return $api.post('/auth/logout');
     }
+
+    static async changePassword(){
+        return $api.post('/auth/changepassword', { currentPassword, newPassword })
+    }
 }

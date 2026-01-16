@@ -29,7 +29,6 @@ $api.interceptors.response.use((config) => {
 }, async (error) => {
     const originalRequest = error.config;
 
-    // ГАРД: Якщо помилка прийшла від САМОГО запиту на рефреш (який робить цей інтерцептор)
     if (error.config.url.includes('/auth/refresh')) {
         return Promise.reject(error);
     }
@@ -49,7 +48,6 @@ $api.interceptors.response.use((config) => {
         isRefreshing = true;
 
         try {
-            // Ось цей запит робить інтерцептор, коли токен помирає ПІД ЧАС роботи
             const response = await axios.get(`${API_URL}/auth/refresh`, { withCredentials: true });
             const newToken = response.data.accessToken;
 

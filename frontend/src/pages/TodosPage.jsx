@@ -1,12 +1,55 @@
 import { useSelector, useDispatch } from 'react-redux';
-import { logout } from '../store/slices/authSlice';
+import { logout, changePassword } from '../store/slices/authSlice';
 import AuthService from '../services/authService';
 import RegBtn from '../components/ui/RegBtn';
-import CalendarPage from '../components/ui/Calendar'; // Або '../components/ui/Calendar' залежно від того, де ти його зберіг
+import CalendarPage from '../components/ui/Calendar';
+import { useState } from 'react';
+import ChangePassModal from '../components/ChangePassModal';
+import ModalMessage from '../components/ui/ModalMessage';
 
 const TodosPage = () => {
     const dispatch = useDispatch();
     const { user } = useSelector(state => state.auth);
+
+    const [isChangeOpen, setIsChangeOpen] = useState(false);
+    const [errorMessage, setErrorMessage] = useState(null);
+
+    const openChangeModal = () => {
+        setIsChangeOpen(true);
+    };
+
+    const handleChangePassword = async (values) => {
+        // 1. Відправляємо екшн
+        const result = await dispatch(changePassword(values));
+
+        // 2. Логуємо результат для діагностики
+        console.log("Result Action:", result);
+
+        if (changePassword.fulfilled.match(result)) {
+            setIsChangeOpen(false);
+            alert("Password changed successfully! 🎉");
+        } 
+        else if (changePassword.rejected.match(result)) {
+            const payload = result.payload;
+            console.log("Error Payload:", payload); // Подивіться, що тут
+            
+            let text = "Something went wrong";
+
+            // Перевірка різних форматів помилки
+            if (payload?.errors?.length > 0) {
+                text = payload.errors[0].msg;
+            } 
+            else if (payload?.message) {
+                text = payload.message;
+            } 
+            else if (typeof payload === 'string') {
+                text = payload;
+            }
+            
+            console.log("Setting error text to:", text);
+            setErrorMessage(text); // Це має відкрити ModalMessage
+        }
+    };
 
     const handleLogout = async () => {
         try {
@@ -15,29 +58,46 @@ const TodosPage = () => {
         } catch (error) {
             console.log(error);
         }
-    }
+    };
 
     return (
         <div className="min-h-screen bg-gray-900 text-white flex flex-col">
-            {/* ХЕДЕР СТОРІНКИ */}
             <header className="p-6 flex justify-between items-center bg-gray-800 shadow-md">
                 <h1 className="text-2xl font-bold">
-                    Привіт, {user?.username} 👋
+                    Hi, {user?.username} 👋
                 </h1>
+
                 <div className="w-32">
-                    <RegBtn text="Вийти" onClick={handleLogout} />
+                    <RegBtn text="Logout" onClick={handleLogout} />
                 </div>
             </header>
 
-            {/* ОСНОВНИЙ КОНТЕНТ - КАЛЕНДАР */}
             <main className="flex-1 p-4 overflow-hidden">
-                {/* Вставляємо компонент календаря сюди */}
-                <CalendarPage /> 
+                <CalendarPage />
             </main>
 
-            <footer className="p-4 text-center text-gray-500 text-sm">
-                Це захищена сторінка. Тільки авторизовані бачать це.
+            <footer className="p-4 text-center text-gray-500 text-sm flex flex-col">
+                It is secured page. Only you can see it.
+                <button
+                    className='bg-neutral-600 w-1/2 mx-auto mt-3 rounded-lg text-xl text-white py-2 hover:bg-neutral-500 transition'
+                    onClick={openChangeModal}
+                >
+                    Change Password
+                </button>
             </footer>
+
+            <ChangePassModal
+                isOpen={isChangeOpen}
+                onClose={() => setIsChangeOpen(false)}
+                onSubmit={handleChangePassword}
+            />
+
+            <ModalMessage
+                isOpen={!!errorMessage}
+                onClose={() => setErrorMessage(null)}
+                error={errorMessage}
+                title="Change Failed"
+            />
         </div>
     );
 };

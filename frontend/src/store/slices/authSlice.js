@@ -66,6 +66,26 @@ export const logout = createAsyncThunk(
     }
 );
 
+export const changePassword = createAsyncThunk(
+    'auth/changepassword',
+    async ({ currentPassword, newPassword }, { rejectWithValue }) => {
+        try {
+            const response = await $axios.post('/auth/changepassword', { 
+                currentPassword, 
+                newPassword 
+            });
+            return response.data;
+        } catch (error) {
+            // Ми повертаємо ВЕСЬ об'єкт response.data, 
+            // бо там лежить масив errors від валідатора
+            if (error.response && error.response.data) {
+                return rejectWithValue(error.response.data);
+            }
+            return rejectWithValue({ message: error.message });
+        }
+    }
+);
+
 const getUserFromStorage = () => {
     try {
         const userStr = localStorage.getItem('user');
@@ -80,7 +100,8 @@ const initialState = {
     token: localStorage.getItem('token'),
     isAuth: false,
     isLoading: !!localStorage.getItem('token'),
-    error: null
+    error: null,
+    theme: localStorage.getItem('theme') || 'default'
 }
 
 const authSlice = createSlice({
@@ -98,6 +119,11 @@ const authSlice = createSlice({
         },
         setLoading: (state, action) => {
             state.isLoading = action.payload;
+        },
+        setTheme: (state, action) => {
+            const theme = action.payload;
+            state.theme = theme;
+            localStorage.setItem('theme', theme);
         }
     },
 
@@ -154,9 +180,21 @@ const authSlice = createSlice({
                 state.token = null;
                 state.isAuth = false;
             })
+
+            // CHANGE PASSORD
+            // .addCase(changePassword.pending, (state) => {
+            //     state.isLoading = true;
+            // })
+            // .addCase(changePassword.fulfilled, (state, action) => {
+            //     state.isLoading = false;
+            // })
+            // .addCase(changePassword.rejected, (state, action) => {
+            //     state.isLoading = false;
+            //     state.error = action.payload;
+            // })
     }
 });
 
-export const { setCredentials, setLoading } = authSlice.actions;
+export const { setCredentials, setLoading, setTheme } = authSlice.actions;
 
 export default authSlice.reducer;

@@ -5,6 +5,8 @@ import { useCalendar } from '../../hooks/useCalendar';
 import { fetchTodos, selectTodosGroupedByDate, addTodo, toggleTodoStatus, deleteTodo } from '../../store/slices/todoSlice';
 import { motion, AnimatePresence } from 'framer-motion';
 import CalendarDay from './CalendarDay';
+import DropDown from '../DropDown'
+import { useSwipeable } from 'react-swipeable'
 
 const CalendarPage = () => {
     const dispatch = useDispatch();
@@ -12,6 +14,13 @@ const CalendarPage = () => {
     const { isLoading } = useSelector(state => state.todos);
     const tasksByDate = useSelector(selectTodosGroupedByDate);
     const [selectedDay, setSelectedDay] = useState(null);
+
+    const swipeHandlers = useSwipeable({
+        onSwipedLeft: nextMonth,
+        onSwipedRight: prevMonth,
+        preventDefaultTouchmoveEvent: true,
+        trackMouse: true
+    });
 
     useEffect(() => {
         dispatch(fetchTodos());
@@ -43,20 +52,23 @@ const CalendarPage = () => {
         dispatch(deleteTodo(id));
     }
 
+
+
     return (
         <div className="p-4 md:p-6 max-w-7xl mx-auto md:min-h-screen flex flex-col">
             <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-                <h2 className="text-2xl md:text-3xl font-bold capitalize text-gray-800">
+                <h2 className="text-2xl md:text-3xl font-bold capitalize flex">
                     {format(currentDate, 'MMMM yyyy')}
+                    <div className="pl-5"><DropDown /></div>
                 </h2>
-                <div className="flex gap-2 w-full md:w-auto justify-center">
+                <div className="hidden md:visible md:flex gap-2 w-full md:w-auto justify-center">
                     <button onClick={prevMonth} className="px-4 py-2 bg-white text-black border rounded hover:bg-gray-50">Prev</button>
                     <button onClick={goToToday} className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Today</button>
                     <button onClick={nextMonth} className="px-4 py-2 bg-white text-black border rounded hover:bg-gray-50">Next</button>
                 </div>
             </div>
 
-            <div className="grid grid-cols-7 gap-px bg-gray-200 border border-gray-200 shadow-sm overflow-hidden rounded-lg">
+            <div {...swipeHandlers} className="grid grid-cols-7 gap-px bg-gray-200 border border-gray-200 shadow-sm overflow-hidden rounded-lg">
                 {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(d => (
                     <div key={d} className="bg-gray-50 p-2 text-center font-semibold text-gray-500 text-sm h-10">
                         {d}
@@ -89,7 +101,7 @@ const CalendarPage = () => {
             <AnimatePresence>
                 {selectedDay && (
                     <motion.div
-                        
+
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
@@ -99,7 +111,7 @@ const CalendarPage = () => {
                         onClick={closeExpandedView}
                     >
                         <motion.div
-                            
+
                             initial={{ scale: 0.95, opacity: 0, y: 20 }}
                             animate={{ scale: 1, opacity: 1, y: 0 }}
                             exit={{ scale: 0.95, opacity: 0, y: 20 }}
@@ -126,7 +138,7 @@ const CalendarPage = () => {
                                     tasks={tasksByDate[format(selectedDay, 'yyyy-MM-dd')] || []}
                                     onAddTask={handleAddTask}
                                     onToggle={handleToggleTask}
-                                    handleRemove={handleRemoveTask} 
+                                    handleRemove={handleRemoveTask}
                                     isExpanded={true}
                                 />
                             </div>
