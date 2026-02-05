@@ -39,7 +39,6 @@ const CalendarDay = memo(({ day, currentDate, tasks = [], onAddTask, onToggle, i
                 relative flex flex-col h-full border transition-all
                 ${themeClasses} 
                 ${isCurrentDay ? '!border-blue-500' : 'border-gray-200'}
-                /* 2. Важливо: прибрали p-1, щоб сітка починалася рівно від краю */
             `}
         >
             <div className={`h-6 flex items-center justify-end px-1 ${isCurrentDay ? 'bg-blue-50/50' : ''}`}>

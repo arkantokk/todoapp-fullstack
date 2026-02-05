@@ -31,7 +31,7 @@ const Login = () => {
 
         <div className="min-h-screen flex items-center justify-center bg-gray-900 px-4">
 
-            <div className='bg-gray-800 border border-gray-700 p-8 rounded-2xl shadow-2xl w-full max-w-md'>
+            <div className='bg-gray-800 border border-gray-700 p-8 rounded-2xl shadow-[0px_4px_17px_3px_rgba(0,_0,_0,_0.8)] w-full max-w-md'>
 
                 <h1 className='text-3xl font-bold text-center text-white mb-8'>Login</h1>
 

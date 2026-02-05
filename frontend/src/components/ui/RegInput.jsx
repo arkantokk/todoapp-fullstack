@@ -3,7 +3,7 @@ const RegInput = ({ label, error, id, ...props }) => {
         <div className="flex flex-col gap-1 w-full">
             
             {label && (
-                <label htmlFor={id} className="text-gray-700 text-sm font-semibold">
+                <label htmlFor={id} className="text-white text-sm font-semibold">
                     {label}
                 </label>
             )}

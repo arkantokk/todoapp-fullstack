@@ -171,7 +171,7 @@ const CalendarPage = () => {
                                 ✕
                             </button>
 
-                            <h3 className="text-2xl font-bold mb-6 border-b pb-4">
+                            <h3 className="text-2xl font-bold mb-6 border-b pb-4 text-black">
                                 {format(selectedDay, 'EEEE, d MMMM yyyy')}
                             </h3>
 
