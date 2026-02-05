@@ -26,5 +26,3 @@ JWT_ACCESS_SECRET,
 JWT_REFRESH_SECRET.
 
 Run npm install and npm start in both the frontend and backend directories.
-
-Development Roadmap
